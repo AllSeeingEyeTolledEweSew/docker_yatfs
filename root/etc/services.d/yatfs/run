@@ -1,0 +1,39 @@
+#!/usr/bin/with-contenv bash
+
+umask 022
+
+
+dir_non_empty() {
+  find "$1" -mindepth 1 -print | grep -q .
+}
+
+
+if [ -n "${DELUGE_HOST}" ] || dir_non_empty /deluge; then
+  PARAMS="${PARAMS} --backend=deluge"
+fi
+if dir_non_empty /deluge; then
+  PARAMS="${PARAMS} --deluge_config_dir=/deluge"
+fi
+if [ -n "${DELUGE_HOST}" ]; then
+  PARAMS="${PARAMS} --deluge_host=${DELUGE_HOST}"
+fi
+if [ -n "${DELUGE_USERNAME}" ]; then
+  PARAMS="${PARAMS} --deluge_username=${DELUGE_USERNAME}"
+fi
+if [ -n "${DELUGE_PASSWORD}" ]; then
+  PARAMS="${PARAMS} --deluge_password=${DELUGE_PASSWORD}"
+fi
+
+if [ -n "${FUSE_OPTIONS}" ]; then
+  PARAMS="${PARAMS} --fuse_options=${FUSE_OPTIONS}"
+fi
+
+if dir_non_empty /btn; then
+  PARAMS="${PARAMS} --btn_cache_path /btn"
+fi
+
+if [ -n "${EXTRA_OPTIONS}" ]; then
+  PARAMS="${PARAMS} ${EXTRA_OPTIONS}"
+fi
+
+exec s6-setuidgid abc /usr/bin/yatfs ${PARAMS} /mnt
